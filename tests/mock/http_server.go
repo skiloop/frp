@@ -3,6 +3,7 @@ package mock
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"regexp"
 	"strings"
@@ -12,10 +13,40 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type HTTPServer struct {
+	l net.Listener
+
+	port    int
+	handler http.HandlerFunc
+}
+
+func NewHTTPServer(port int, handler http.HandlerFunc) *HTTPServer {
+	return &HTTPServer{
+		port:    port,
+		handler: handler,
+	}
+}
+
+func (hs *HTTPServer) Start() error {
+	l, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", hs.port))
+	if err != nil {
+		fmt.Printf("http server listen error: %v\n", err)
+		return err
+	}
+	hs.l = l
+
+	go http.Serve(l, http.HandlerFunc(hs.handler))
+	return nil
+}
+
+func (hs *HTTPServer) Stop() {
+	hs.l.Close()
+}
+
 var upgrader = websocket.Upgrader{}
 
-func StartHttpServer(port int) {
-	http.HandleFunc("/", handleHttp)
+func StartHTTPServer(port int) {
+	http.HandleFunc("/", handleHTTP)
 	http.HandleFunc("/ws", handleWebSocket)
 	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), nil)
 }
@@ -40,7 +71,7 @@ func handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleHttp(w http.ResponseWriter, r *http.Request) {
+func handleHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("X-From-Where") == "frp" {
 		w.Header().Set("X-Header-Set", "true")
 	}
@@ -57,8 +88,10 @@ func handleHttp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if strings.Contains(r.Host, "127.0.0.1") || strings.Contains(r.Host, "test2.frp.com") ||
-		strings.Contains(r.Host, "test5.frp.com") || strings.Contains(r.Host, "test6.frp.com") {
+	if strings.HasPrefix(r.Host, "127.0.0.1") || strings.HasPrefix(r.Host, "test2.frp.com") ||
+		strings.HasPrefix(r.Host, "test5.frp.com") || strings.HasPrefix(r.Host, "test6.frp.com") ||
+		strings.HasPrefix(r.Host, "test.frp1.com") || strings.HasPrefix(r.Host, "new.test.frp1.com") {
+
 		w.WriteHeader(200)
 		w.Write([]byte(consts.TEST_HTTP_NORMAL_STR))
 	} else if strings.Contains(r.Host, "test3.frp.com") {

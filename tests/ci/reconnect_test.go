@@ -17,7 +17,6 @@ const FRPS_RECONNECT_CONF = `
 bind_addr = 0.0.0.0
 bind_port = 20000
 log_file = console
-# debug, info, warn, error
 log_level = debug
 token = 123456
 `
@@ -27,7 +26,6 @@ const FRPC_RECONNECT_CONF = `
 server_addr = 127.0.0.1
 server_port = 20000
 log_file = console
-# debug, info, warn, error
 log_level = debug
 token = 123456
 admin_port = 21000
@@ -58,26 +56,26 @@ func TestReconnect(t *testing.T) {
 		defer frpsProcess.Stop()
 	}
 
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	frpcProcess := util.NewProcess(consts.FRPC_BIN_PATH, []string{"-c", frpcCfgPath})
 	err = frpcProcess.Start()
 	if assert.NoError(err) {
 		defer frpcProcess.Stop()
 	}
-	time.Sleep(250 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	// test tcp
-	res, err := util.SendTcpMsg("127.0.0.1:20801", consts.TEST_TCP_ECHO_STR)
+	res, err := util.SendTCPMsg("127.0.0.1:20801", consts.TEST_TCP_ECHO_STR)
 	assert.NoError(err)
 	assert.Equal(consts.TEST_TCP_ECHO_STR, res)
 
 	// stop frpc
 	frpcProcess.Stop()
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// test tcp, expect failed
-	_, err = util.SendTcpMsg("127.0.0.1:20801", consts.TEST_TCP_ECHO_STR)
+	_, err = util.SendTCPMsg("127.0.0.1:20801", consts.TEST_TCP_ECHO_STR)
 	assert.Error(err)
 
 	// restart frpc
@@ -86,19 +84,19 @@ func TestReconnect(t *testing.T) {
 	if assert.NoError(err) {
 		defer newFrpcProcess.Stop()
 	}
-	time.Sleep(250 * time.Millisecond)
+	time.Sleep(500 * time.Millisecond)
 
 	// test tcp
-	res, err = util.SendTcpMsg("127.0.0.1:20801", consts.TEST_TCP_ECHO_STR)
+	res, err = util.SendTCPMsg("127.0.0.1:20801", consts.TEST_TCP_ECHO_STR)
 	assert.NoError(err)
 	assert.Equal(consts.TEST_TCP_ECHO_STR, res)
 
 	// stop frps
 	frpsProcess.Stop()
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// test tcp, expect failed
-	_, err = util.SendTcpMsg("127.0.0.1:20801", consts.TEST_TCP_ECHO_STR)
+	_, err = util.SendTCPMsg("127.0.0.1:20801", consts.TEST_TCP_ECHO_STR)
 	assert.Error(err)
 
 	// restart frps
@@ -111,7 +109,7 @@ func TestReconnect(t *testing.T) {
 	time.Sleep(2 * time.Second)
 
 	// test tcp
-	res, err = util.SendTcpMsg("127.0.0.1:20801", consts.TEST_TCP_ECHO_STR)
+	res, err = util.SendTCPMsg("127.0.0.1:20801", consts.TEST_TCP_ECHO_STR)
 	assert.NoError(err)
 	assert.Equal(consts.TEST_TCP_ECHO_STR, res)
 }

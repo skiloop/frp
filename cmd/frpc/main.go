@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main // "github.com/fatedier/frp/cmd/frpc"
+package main
 
 import (
+	"math/rand"
+	"time"
+
+	_ "github.com/fatedier/frp/assets/frpc/statik"
 	"github.com/fatedier/frp/cmd/frpc/sub"
 
 	"github.com/fatedier/golib/crypto"
@@ -22,6 +26,7 @@ import (
 
 func main() {
 	crypto.DefaultSalt = "frp"
+	rand.Seed(time.Now().UnixNano())
 
 	sub.Execute()
 }
